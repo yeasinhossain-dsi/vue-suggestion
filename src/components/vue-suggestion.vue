@@ -78,10 +78,10 @@ export default {
       type: [Object, String, Number],
       default: () => getDefault('value'),
     },
-    setLabel: {
-      type: Function,
-      default: () => getDefault('setLabel'),
-    },
+    // setLabel: {
+    //   type: Function,
+    //   default: () => getDefault('setLabel'),
+    // },    
     items: {
       type: Array,
       default: () => getDefault('items'),
@@ -165,7 +165,7 @@ export default {
         if (!value) {
           return;
         }
-        this.searchText = this.setLabel(value);
+        this.searchText = this.setLabel(value);        
       },
       deep: true,
     },
@@ -181,10 +181,13 @@ export default {
   },
   mounted() {
     if (this.value) {
-      this.searchText = this.setLabel(this.value);
+      this.searchText = this.setLabel(this.value);      
     }
   },
   methods: {
+    setLabel(item){
+      return "";
+    },
     inputChange() {
       this.showList = this.isAbleToShowList();
       this.cursor = 0;
@@ -211,7 +214,7 @@ export default {
     },
     selectItem({ vsItemIndex, ...item } = {}) {
       if (item) {
-        this.searchText = this.setLabel(item);
+        this.searchText = this.setLabel(item);        
         this.$emit('selected', item);
       }
       this.$emit('input', item);
@@ -240,9 +243,6 @@ export default {
 </script>
 
 <style>
-.vue-suggestion {
-  position: relative;
-}
 .vue-suggestion .vs__list,
 .vue-suggestion .vs__loading {
   position: absolute;

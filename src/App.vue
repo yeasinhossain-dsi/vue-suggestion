@@ -1,31 +1,21 @@
 <template>
-  <div style="text-align: center; width: 100%;">
-    <span style="color: grey;">made with &#x2764; by Steven.</span>
-    <p><span>Press enter to select the first item in the suggestion list</span></p>
+  <div style="text-align: center; width: 100%;">    
+    
     <vue-suggestion
-      v-model="item"
       :items="items"
       :setLabel="setLabel"
-      :itemTemplate="itemTemplate"
-      maxLen="20"
       @changed="inputChange"
     ></vue-suggestion>
+
     <template v-if="item && item.id">
       <p>Selected item:</p>
       <code>{{ item }}</code>
     </template>
-    <div style="text-align: center; margin-top: 20px;">
-      View
-      <span style="font-size: 15px;">
-        [<a href="https://github.com/iamstevendao/vue-suggestion">github</a>,
-        <a href="https://www.npmjs.com/package/vue-suggestion">npm</a>].
-      </span>
-    </div>
+
   </div>
 </template>
 
 <script>
-import itemTemplate from './demo/item-template.vue';
 import animals from './demo/animals';
 
 export default {
@@ -34,8 +24,7 @@ export default {
     return {
       itemsApi: [],
       item: {},
-      items: [],
-      itemTemplate,
+      items: [],      
       isLoading: true,
     };
   },

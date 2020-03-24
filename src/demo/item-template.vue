@@ -1,9 +1,6 @@
 <template>
   <div>
-    <b>#{{ item.id }}&nbsp;</b>
-    <span>{{ item.name }}</span>
-    <br />
-    <span>{{ item.description }}</span>
+    <b>{{ item.id }}</b>
   </div>
 </template>
 

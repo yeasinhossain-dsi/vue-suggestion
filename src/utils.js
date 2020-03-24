@@ -1,10 +1,11 @@
+import itemTemplate from './demo/item-template.vue';
 
 export const defaultOptions = {
-  itemTemplate: null,
+  itemTemplate: itemTemplate,
   minLen: 2,
   maxLen: 100,
   value: null,
-  setLabel: item => item,
+  // setLabel: item => item.id,
   items: () => [],
   placeholder: '',
   inputClasses: '',
