@@ -1,31 +1,27 @@
 <template>
-  <div style="text-align: center; width: 100%;">    
-    
-    <vue-suggestion
-      :items="items"
-      :setLabel="setLabel"
-      @changed="inputChange"
-    ></vue-suggestion>
+  <div style="text-align: center; width: 100%;">
+    <vue-suggestion :items="items" :setLabel="setLabel" @changed="inputChange"></vue-suggestion>
+
+    <vue-suggestion :items="items" :setLabel="setLabel" @changed="inputChange"></vue-suggestion>
 
     <template v-if="item && item.id">
       <p>Selected item:</p>
       <code>{{ item }}</code>
     </template>
-
   </div>
 </template>
 
 <script>
-import animals from './demo/animals';
+import animals from "./demo/animals";
 
 export default {
-  name: 'demo',
+  name: "demo",
   data() {
     return {
       itemsApi: [],
       item: {},
-      items: [],      
-      isLoading: true,
+      items: [],
+      isLoading: true
     };
   },
   methods: {
@@ -33,10 +29,11 @@ export default {
       return item.name;
     },
     inputChange(text) {
-      this.items = animals
-        .filter(item => (new RegExp(text.toLowerCase())).test(item.name.toLowerCase()));
-    },
-  },
+      this.items = animals.filter(item =>
+        new RegExp(text.toLowerCase()).test(item.name.toLowerCase())
+      );
+    }
+  }
 };
 </script>
 

@@ -2,6 +2,7 @@
   <div :class="[wrapperClasses, 'vue-suggestion']">
     <div :class="[{ vs__selected: value }, inputWrapperClasses, 'vs__input-group']">
       <input
+        v-bind:id="randomID"
         v-model="searchText"
         type="search"
         :class="[inputClasses, 'vs__input']"
@@ -26,9 +27,7 @@
           <div
             v-if="itemGroups.length > 1 || group.header"
             :class="[suggestionGroupHeaderClasses, 'vs__group-header']"
-          >
-            {{ group.header }}
-          </div>
+          >{{ group.header }}</div>
           <div
             v-for="item in group.items"
             :key="item.vsItemIndex"
@@ -49,102 +48,103 @@
 </template>
 
 <script>
-import utils from '../utils';
+import utils from "../utils";
 
 function getDefault(key) {
   const value = utils.options[key];
-  if (typeof value === 'undefined') {
+  if (typeof value === "undefined") {
     return utils.options[key];
   }
   return value;
 }
 
 export default {
-  name: 'VueSuggestion',
+  name: "VueSuggestion",
   props: {
     itemTemplate: {
       type: Object,
-      default: () => getDefault('itemTemplate'),
+      default: () => getDefault("itemTemplate")
     },
     minLen: {
       type: Number,
-      default: () => getDefault('minLen'),
+      default: () => getDefault("minLen")
     },
     maxLen: {
       type: Number,
-      default: () => getDefault('maxLen'),
+      default: () => getDefault("maxLen")
     },
     value: {
       type: [Object, String, Number],
-      default: () => getDefault('value'),
+      default: () => getDefault("value")
     },
     // setLabel: {
     //   type: Function,
     //   default: () => getDefault('setLabel'),
-    // },    
+    // },
     items: {
       type: Array,
-      default: () => getDefault('items'),
+      default: () => getDefault("items")
     },
     disabled: {
       type: Boolean,
-      default: () => getDefault('disabled'),
+      default: () => getDefault("disabled")
     },
     loading: {
       type: Boolean,
-      default: () => getDefault('loading'),
+      default: () => getDefault("loading")
     },
     placeholder: {
       type: String,
-      default: () => getDefault('placeholder'),
+      default: () => getDefault("placeholder")
     },
     inputClasses: {
       type: String,
-      default: () => getDefault('inputClasses'),
+      default: () => getDefault("inputClasses")
     },
     wrapperClasses: {
       type: String,
-      default: () => getDefault('wrapperClasses'),
+      default: () => getDefault("wrapperClasses")
     },
     inputWrapperClasses: {
       type: String,
-      default: () => getDefault('inputWrapperClasses'),
+      default: () => getDefault("inputWrapperClasses")
     },
     suggestionListClasses: {
       type: String,
-      default: () => getDefault('suggestionListClasses'),
+      default: () => getDefault("suggestionListClasses")
     },
     suggestionGroupClasses: {
       type: String,
-      default: () => getDefault('suggestionGroupClasses'),
+      default: () => getDefault("suggestionGroupClasses")
     },
     suggestionGroupHeaderClasses: {
       type: String,
-      default: () => getDefault('suggestionGroupHeaderClasses'),
+      default: () => getDefault("suggestionGroupHeaderClasses")
     },
     suggestionItemWrapperClasses: {
       type: String,
-      default: () => getDefault('suggestionItemWrapperClasses'),
+      default: () => getDefault("suggestionItemWrapperClasses")
     },
     suggestionItemClasses: {
       type: String,
-      default: () => getDefault('suggestionItemClasses'),
-    },
+      default: () => getDefault("suggestionItemClasses")
+    }
   },
   data() {
     return {
-      searchText: '',
+      randomID: new Date().getTime(),
+      searchText: "",
       showList: false,
-      cursor: 0,
+      cursor: 0
     };
   },
   computed: {
     itemGroups() {
       return this.items.reduce((prv, crr, index) => {
-        const groupName = crr.suggestionGroup || '';
+        const groupName = crr.suggestionGroup || "";
         const item = {
           ...crr,
-          vsItemIndex: index,
+          vsItemIndex: index
         };
         const foundGroup = prv.find(gr => gr.header === groupName);
         if (foundGroup) {
@@ -152,12 +152,12 @@ export default {
         } else {
           prv.push({
             header: groupName,
-            items: [item],
+            items: [item]
           });
         }
         return prv;
       }, []);
-    },
+    }
   },
   watch: {
     value: {
@@ -165,48 +165,53 @@ export default {
         if (!value) {
           return;
         }
-        this.searchText = this.setLabel(value);        
+        this.searchText = this.setLabel(value);
       },
-      deep: true,
+      deep: true
     },
     // eslint-disable-next-line func-names
-    'items.length': function () {
+    "items.length": function() {
       // Items might be changed from Promise after searching
       // So we need the check if we should show the suggestion list
       this.showList = this.isAbleToShowList();
-    },
+    }
   },
   created() {
     this.checkMissingProps();
   },
   mounted() {
     if (this.value) {
-      this.searchText = this.setLabel(this.value);      
+      this.searchText = this.setLabel(this.value);
     }
   },
   methods: {
-    setLabel(item){
+    setLabel(item) {
       return "";
     },
-    inputChange() {
-      this.showList = this.isAbleToShowList();
+    inputChange($ev) {
+      this.showList = this.isAbleToShowList($ev);
       this.cursor = 0;
-      this.$emit('changed', this.searchText);
+      this.$emit("changed", this.searchText);
     },
-    isAbleToShowList() {
-      return (this.searchText || '').length >= this.minLen && this.items.length > 0;
+    isAbleToShowList($ev) {
+      if ($ev && $ev.target && document.activeElement != $ev.target) return false;
+      return (
+        (this.searchText || "").length >= this.minLen && this.items.length > 0
+      );
     },
     checkMissingProps() {
       if (!this.itemTemplate) {
-        console.warn('You need to pass `template` as the suggestion list item template');
+        console.warn(
+          "You need to pass `template` as the suggestion list item template"
+        );
       }
     },
-    focus() {
-      this.$emit('focus', this.searchText);
-      this.showList = this.isAbleToShowList();
+    focus($ev) {
+      this.$emit("focus", this.searchText);
+      this.showList = this.isAbleToShowList($ev);
     },
     blur() {
-      this.$emit('blur', this.searchText);
+      this.$emit("blur", this.searchText);
       // set timeout for the click event to work
       setTimeout(() => {
         this.showList = false;
@@ -214,19 +219,19 @@ export default {
     },
     selectItem({ vsItemIndex, ...item } = {}) {
       if (item) {
-        this.searchText = this.setLabel(item);        
-        this.$emit('selected', item);
+        this.searchText = this.setLabel(item);
+        this.$emit("selected", item);
       }
-      this.$emit('input', item);
+      this.$emit("input", item);
     },
     keyUp() {
-      this.$emit('key-up', this.searchText);
+      this.$emit("key-up", this.searchText);
       if (this.cursor > 0) {
         this.cursor -= 1;
       }
     },
     keyDown() {
-      this.$emit('key-down', this.searchText);
+      this.$emit("key-down", this.searchText);
       if (this.cursor < this.items.length - 1) {
         this.cursor += 1;
       }
@@ -236,9 +241,9 @@ export default {
         this.selectItem(this.items[this.cursor]);
         this.showList = false;
       }
-      this.$emit('enter', this.items[this.cursor]);
-    },
-  },
+      this.$emit("enter", this.items[this.cursor]);
+    }
+  }
 };
 </script>
 

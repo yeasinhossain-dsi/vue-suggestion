@@ -896,18 +896,143 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
+//
+//
+//
+//
+//
+//
+var script = {
+  props: {
+    item: {
+      required: true
+    }
+  }
+};
+
+function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier /* server only */, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
+    if (typeof shadowMode !== 'boolean') {
+        createInjectorSSR = createInjector;
+        createInjector = shadowMode;
+        shadowMode = false;
+    }
+    // Vue.extend constructor export interop.
+    const options = typeof script === 'function' ? script.options : script;
+    // render functions
+    if (template && template.render) {
+        options.render = template.render;
+        options.staticRenderFns = template.staticRenderFns;
+        options._compiled = true;
+        // functional template
+        if (isFunctionalTemplate) {
+            options.functional = true;
+        }
+    }
+    // scopedId
+    if (scopeId) {
+        options._scopeId = scopeId;
+    }
+    let hook;
+    if (moduleIdentifier) {
+        // server build
+        hook = function (context) {
+            // 2.3 injection
+            context =
+                context || // cached call
+                    (this.$vnode && this.$vnode.ssrContext) || // stateful
+                    (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext); // functional
+            // 2.2 with runInNewContext: true
+            if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+                context = __VUE_SSR_CONTEXT__;
+            }
+            // inject component styles
+            if (style) {
+                style.call(this, createInjectorSSR(context));
+            }
+            // register component module identifier for async chunk inference
+            if (context && context._registeredComponents) {
+                context._registeredComponents.add(moduleIdentifier);
+            }
+        };
+        // used by ssr in case component is cached and beforeCreate
+        // never gets called
+        options._ssrRegister = hook;
+    }
+    else if (style) {
+        hook = shadowMode
+            ? function (context) {
+                style.call(this, createInjectorShadow(context, this.$root.$options.shadowRoot));
+            }
+            : function (context) {
+                style.call(this, createInjector(context));
+            };
+    }
+    if (hook) {
+        if (options.functional) {
+            // register for functional component in vue file
+            const originalRender = options.render;
+            options.render = function renderWithStyleInjection(h, context) {
+                hook.call(context);
+                return originalRender(h, context);
+            };
+        }
+        else {
+            // inject component registration as beforeCreate hook
+            const existing = options.beforeCreate;
+            options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
+        }
+    }
+    return script;
+}
+
+/* script */
+var __vue_script__ = script;
+/* template */
+
+var __vue_render__ = function __vue_render__() {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c("div", [_c("b", [_vm._v(_vm._s(_vm.item.id))])]);
+};
+
+var __vue_staticRenderFns__ = [];
+__vue_render__._withStripped = true;
+/* style */
+
+var __vue_inject_styles__ = undefined;
+/* scoped */
+
+var __vue_scope_id__ = undefined;
+/* module identifier */
+
+var __vue_module_identifier__ = undefined;
+/* functional template */
+
+var __vue_is_functional_template__ = false;
+/* style inject */
+
+/* style inject SSR */
+
+/* style inject shadow dom */
+
+var __vue_component__ = normalizeComponent({
+  render: __vue_render__,
+  staticRenderFns: __vue_staticRenderFns__
+}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
 var defaultOptions = {
-  itemTemplate: null,
+  itemTemplate: __vue_component__,
   minLen: 2,
   maxLen: 100,
   value: null,
-  setLabel: function setLabel(item) {
-    return item;
-  },
+  // setLabel: item => item.id,
   items: function items() {
     return [];
   },
@@ -1828,122 +1953,121 @@ function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { 
 function getDefault(key) {
   var value = utils.options[key];
 
-  if (typeof value === 'undefined') {
+  if (typeof value === "undefined") {
     return utils.options[key];
   }
 
   return value;
 }
 
-var script = {
-  name: 'VueSuggestion',
+var script$1 = {
+  name: "VueSuggestion",
   props: {
     itemTemplate: {
       type: Object,
       default: function _default() {
-        return getDefault('itemTemplate');
+        return getDefault("itemTemplate");
       }
     },
     minLen: {
       type: Number,
       default: function _default() {
-        return getDefault('minLen');
+        return getDefault("minLen");
       }
     },
     maxLen: {
       type: Number,
       default: function _default() {
-        return getDefault('maxLen');
+        return getDefault("maxLen");
       }
     },
     value: {
       type: [Object, String, Number],
       default: function _default() {
-        return getDefault('value');
+        return getDefault("value");
       }
     },
-    setLabel: {
-      type: Function,
-      default: function _default() {
-        return getDefault('setLabel');
-      }
-    },
+    // setLabel: {
+    //   type: Function,
+    //   default: () => getDefault('setLabel'),
+    // },
     items: {
       type: Array,
       default: function _default() {
-        return getDefault('items');
+        return getDefault("items");
       }
     },
     disabled: {
       type: Boolean,
       default: function _default() {
-        return getDefault('disabled');
+        return getDefault("disabled");
       }
     },
     loading: {
       type: Boolean,
       default: function _default() {
-        return getDefault('loading');
+        return getDefault("loading");
       }
     },
     placeholder: {
       type: String,
       default: function _default() {
-        return getDefault('placeholder');
+        return getDefault("placeholder");
       }
     },
     inputClasses: {
       type: String,
       default: function _default() {
-        return getDefault('inputClasses');
+        return getDefault("inputClasses");
       }
     },
     wrapperClasses: {
       type: String,
       default: function _default() {
-        return getDefault('wrapperClasses');
+        return getDefault("wrapperClasses");
       }
     },
     inputWrapperClasses: {
       type: String,
       default: function _default() {
-        return getDefault('inputWrapperClasses');
+        return getDefault("inputWrapperClasses");
       }
     },
     suggestionListClasses: {
       type: String,
       default: function _default() {
-        return getDefault('suggestionListClasses');
+        return getDefault("suggestionListClasses");
       }
     },
     suggestionGroupClasses: {
       type: String,
       default: function _default() {
-        return getDefault('suggestionGroupClasses');
+        return getDefault("suggestionGroupClasses");
       }
     },
     suggestionGroupHeaderClasses: {
       type: String,
       default: function _default() {
-        return getDefault('suggestionGroupHeaderClasses');
+        return getDefault("suggestionGroupHeaderClasses");
       }
     },
     suggestionItemWrapperClasses: {
       type: String,
       default: function _default() {
-        return getDefault('suggestionItemWrapperClasses');
+        return getDefault("suggestionItemWrapperClasses");
       }
     },
     suggestionItemClasses: {
       type: String,
       default: function _default() {
-        return getDefault('suggestionItemClasses');
+        return getDefault("suggestionItemClasses");
       }
     }
   },
   data: function data() {
     return {
-      searchText: '',
+      randomID: new Date().getTime(),
+      searchText: "",
       showList: false,
       cursor: 0
     };
@@ -1951,7 +2075,7 @@ var script = {
   computed: {
     itemGroups: function itemGroups() {
       return this.items.reduce(function (prv, crr, index) {
-        var groupName = crr.suggestionGroup || '';
+        var groupName = crr.suggestionGroup || "";
 
         var item = _objectSpread$1({}, crr, {
           vsItemIndex: index
@@ -1986,7 +2110,7 @@ var script = {
       deep: true
     },
     // eslint-disable-next-line func-names
-    'items.length': function itemsLength() {
+    "items.length": function itemsLength() {
       // Items might be changed from Promise after searching
       // So we need the check if we should show the suggestion list
       this.showList = this.isAbleToShowList();
@@ -2001,27 +2125,31 @@ var script = {
     }
   },
   methods: {
-    inputChange: function inputChange() {
-      this.showList = this.isAbleToShowList();
-      this.cursor = 0;
-      this.$emit('changed', this.searchText);
+    setLabel: function setLabel(item) {
+      return "";
     },
-    isAbleToShowList: function isAbleToShowList() {
-      return (this.searchText || '').length >= this.minLen && this.items.length > 0;
+    inputChange: function inputChange($ev) {
+      this.showList = this.isAbleToShowList($ev);
+      this.cursor = 0;
+      this.$emit("changed", this.searchText);
+    },
+    isAbleToShowList: function isAbleToShowList($ev) {
+      if ($ev && $ev.target && document.activeElement != $ev.target) return false;
+      return (this.searchText || "").length >= this.minLen && this.items.length > 0;
     },
     checkMissingProps: function checkMissingProps() {
       if (!this.itemTemplate) {
-        console.warn('You need to pass `template` as the suggestion list item template');
+        console.warn("You need to pass `template` as the suggestion list item template");
       }
     },
-    focus: function focus() {
-      this.$emit('focus', this.searchText);
-      this.showList = this.isAbleToShowList();
+    focus: function focus($ev) {
+      this.$emit("focus", this.searchText);
+      this.showList = this.isAbleToShowList($ev);
     },
     blur: function blur() {
       var _this = this;
 
-      this.$emit('blur', this.searchText); // set timeout for the click event to work
+      this.$emit("blur", this.searchText); // set timeout for the click event to work
 
       setTimeout(function () {
         _this.showList = false;
@@ -2034,20 +2162,20 @@ var script = {
 
       if (item) {
         this.searchText = this.setLabel(item);
-        this.$emit('selected', item);
+        this.$emit("selected", item);
       }
 
-      this.$emit('input', item);
+      this.$emit("input", item);
     },
     keyUp: function keyUp() {
-      this.$emit('key-up', this.searchText);
+      this.$emit("key-up", this.searchText);
 
       if (this.cursor > 0) {
         this.cursor -= 1;
       }
     },
     keyDown: function keyDown() {
-      this.$emit('key-down', this.searchText);
+      this.$emit("key-down", this.searchText);
 
       if (this.cursor < this.items.length - 1) {
         this.cursor += 1;
@@ -2059,85 +2187,10 @@ var script = {
         this.showList = false;
       }
 
-      this.$emit('enter', this.items[this.cursor]);
+      this.$emit("enter", this.items[this.cursor]);
     }
   }
 };
-
-function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier /* server only */, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
-    if (typeof shadowMode !== 'boolean') {
-        createInjectorSSR = createInjector;
-        createInjector = shadowMode;
-        shadowMode = false;
-    }
-    // Vue.extend constructor export interop.
-    const options = typeof script === 'function' ? script.options : script;
-    // render functions
-    if (template && template.render) {
-        options.render = template.render;
-        options.staticRenderFns = template.staticRenderFns;
-        options._compiled = true;
-        // functional template
-        if (isFunctionalTemplate) {
-            options.functional = true;
-        }
-    }
-    // scopedId
-    if (scopeId) {
-        options._scopeId = scopeId;
-    }
-    let hook;
-    if (moduleIdentifier) {
-        // server build
-        hook = function (context) {
-            // 2.3 injection
-            context =
-                context || // cached call
-                    (this.$vnode && this.$vnode.ssrContext) || // stateful
-                    (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext); // functional
-            // 2.2 with runInNewContext: true
-            if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-                context = __VUE_SSR_CONTEXT__;
-            }
-            // inject component styles
-            if (style) {
-                style.call(this, createInjectorSSR(context));
-            }
-            // register component module identifier for async chunk inference
-            if (context && context._registeredComponents) {
-                context._registeredComponents.add(moduleIdentifier);
-            }
-        };
-        // used by ssr in case component is cached and beforeCreate
-        // never gets called
-        options._ssrRegister = hook;
-    }
-    else if (style) {
-        hook = shadowMode
-            ? function (context) {
-                style.call(this, createInjectorShadow(context, this.$root.$options.shadowRoot));
-            }
-            : function (context) {
-                style.call(this, createInjector(context));
-            };
-    }
-    if (hook) {
-        if (options.functional) {
-            // register for functional component in vue file
-            const originalRender = options.render;
-            options.render = function renderWithStyleInjection(h, context) {
-                hook.call(context);
-                return originalRender(h, context);
-            };
-        }
-        else {
-            // inject component registration as beforeCreate hook
-            const existing = options.beforeCreate;
-            options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-        }
-    }
-    return script;
-}
 
 const isOldIE = typeof navigator !== 'undefined' &&
     /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
@@ -2193,10 +2246,10 @@ function addStyle(id, css) {
 }
 
 /* script */
-var __vue_script__ = script;
+var __vue_script__$1 = script$1;
 /* template */
 
-var __vue_render__ = function __vue_render__() {
+var __vue_render__$1 = function __vue_render__() {
   var _vm = this;
 
   var _h = _vm.$createElement;
@@ -2218,6 +2271,7 @@ var __vue_render__ = function __vue_render__() {
     }],
     class: [_vm.inputClasses, "vs__input"],
     attrs: {
+      id: _vm.randomID,
       type: "search",
       placeholder: _vm.placeholder,
       disabled: _vm.disabled,
@@ -2269,7 +2323,7 @@ var __vue_render__ = function __vue_render__() {
       class: _vm.suggestionGroupClasses
     }, [_vm.itemGroups.length > 1 || group.header ? _c("div", {
       class: [_vm.suggestionGroupHeaderClasses, "vs__group-header"]
-    }, [_vm._v("\n          " + _vm._s(group.header) + "\n        ")]) : _vm._e(), _vm._v(" "), _vm._l(group.items, function (item) {
+    }, [_vm._v(_vm._s(group.header))]) : _vm._e(), _vm._v(" "), _vm._l(group.items, function (item) {
       return _c("div", {
         key: item.vsItemIndex,
         class: [{
@@ -2294,21 +2348,21 @@ var __vue_render__ = function __vue_render__() {
   }), 0)]) : _vm._e()], 2);
 };
 
-var __vue_staticRenderFns__ = [];
-__vue_render__._withStripped = true;
+var __vue_staticRenderFns__$1 = [];
+__vue_render__$1._withStripped = true;
 /* style */
 
-var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
+var __vue_inject_styles__$1 = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-d12c8842_0", {
-    source: "\n.vue-suggestion {\n  position: relative;\n}\n.vue-suggestion .vs__list,\n.vue-suggestion .vs__loading {\n  position: absolute;\n}\n.vue-suggestion .vs__list .vs__list-item {\n  cursor: pointer;\n}\n.vue-suggestion .vs__list .vs__list-item.vs__item-active {\n  background-color: #f3f6fa;\n}\n",
+  inject("data-v-22c0b4d2_0", {
+    source: "\n.vue-suggestion .vs__list,\n.vue-suggestion .vs__loading {\n  position: absolute;\n}\n.vue-suggestion .vs__list .vs__list-item {\n  cursor: pointer;\n}\n.vue-suggestion .vs__list .vs__list-item.vs__item-active {\n  background-color: #f3f6fa;\n}\n",
     map: {
       "version": 3,
-      "sources": ["/Users/stevend/coding/vue/vue-suggestion/src/components/vue-suggestion.vue"],
+      "sources": ["/home/yeasin/projects/vue-suggestion/src/components/vue-suggestion.vue"],
       "names": [],
-      "mappings": ";AAkPA;EACA,kBAAA;AACA;AACA;;EAEA,kBAAA;AACA;AACA;EACA,eAAA;AACA;AACA;EACA,yBAAA;AACA",
+      "mappings": ";AA0PA;;EAEA,kBAAA;AACA;AACA;EACA,eAAA;AACA;AACA;EACA,yBAAA;AACA",
       "file": "vue-suggestion.vue",
-      "sourcesContent": ["<template>\n  <div :class=\"[wrapperClasses, 'vue-suggestion']\">\n    <div :class=\"[{ vs__selected: value }, inputWrapperClasses, 'vs__input-group']\">\n      <input\n        v-model=\"searchText\"\n        type=\"search\"\n        :class=\"[inputClasses, 'vs__input']\"\n        :placeholder=\"placeholder\"\n        :disabled=\"disabled\"\n        :maxlength=\"maxLen\"\n        @blur=\"blur\"\n        @focus=\"focus\"\n        @input=\"inputChange\"\n        @keydown.enter.prevent=\"keyEnter\"\n        @keydown.up.prevent=\"keyUp\"\n        @keydown.down.prevent=\"keyDown\"\n      />\n      <slot name=\"searchSlot\" />\n    </div>\n    <slot v-if=\"loading\" name=\"loading\">\n      <div class=\"vs__loading\">Loading...</div>\n    </slot>\n    <slot v-else-if=\"showList\" name=\"suggestionList\">\n      <div :class=\"[suggestionListClasses, 'vs__list']\">\n        <div v-for=\"(group, index) in itemGroups\" :class=\"suggestionGroupClasses\" :key=\"index\">\n          <div\n            v-if=\"itemGroups.length > 1 || group.header\"\n            :class=\"[suggestionGroupHeaderClasses, 'vs__group-header']\"\n          >\n            {{ group.header }}\n          </div>\n          <div\n            v-for=\"item in group.items\"\n            :key=\"item.vsItemIndex\"\n            :class=\"[\n              { 'vs__item-active': item.vsItemIndex === cursor },\n              suggestionItemWrapperClasses,\n              'vs__list-item',\n            ]\"\n            @click=\"selectItem(item)\"\n            @mouseover=\"cursor = item.vsItemIndex\"\n          >\n            <div :class=\"suggestionItemClasses\" :is=\"itemTemplate\" :item=\"item\" />\n          </div>\n        </div>\n      </div>\n    </slot>\n  </div>\n</template>\n\n<script>\nimport utils from '../utils';\n\nfunction getDefault(key) {\n  const value = utils.options[key];\n  if (typeof value === 'undefined') {\n    return utils.options[key];\n  }\n  return value;\n}\n\nexport default {\n  name: 'VueSuggestion',\n  props: {\n    itemTemplate: {\n      type: Object,\n      default: () => getDefault('itemTemplate'),\n    },\n    minLen: {\n      type: Number,\n      default: () => getDefault('minLen'),\n    },\n    maxLen: {\n      type: Number,\n      default: () => getDefault('maxLen'),\n    },\n    value: {\n      type: [Object, String, Number],\n      default: () => getDefault('value'),\n    },\n    setLabel: {\n      type: Function,\n      default: () => getDefault('setLabel'),\n    },\n    items: {\n      type: Array,\n      default: () => getDefault('items'),\n    },\n    disabled: {\n      type: Boolean,\n      default: () => getDefault('disabled'),\n    },\n    loading: {\n      type: Boolean,\n      default: () => getDefault('loading'),\n    },\n    placeholder: {\n      type: String,\n      default: () => getDefault('placeholder'),\n    },\n    inputClasses: {\n      type: String,\n      default: () => getDefault('inputClasses'),\n    },\n    wrapperClasses: {\n      type: String,\n      default: () => getDefault('wrapperClasses'),\n    },\n    inputWrapperClasses: {\n      type: String,\n      default: () => getDefault('inputWrapperClasses'),\n    },\n    suggestionListClasses: {\n      type: String,\n      default: () => getDefault('suggestionListClasses'),\n    },\n    suggestionGroupClasses: {\n      type: String,\n      default: () => getDefault('suggestionGroupClasses'),\n    },\n    suggestionGroupHeaderClasses: {\n      type: String,\n      default: () => getDefault('suggestionGroupHeaderClasses'),\n    },\n    suggestionItemWrapperClasses: {\n      type: String,\n      default: () => getDefault('suggestionItemWrapperClasses'),\n    },\n    suggestionItemClasses: {\n      type: String,\n      default: () => getDefault('suggestionItemClasses'),\n    },\n  },\n  data() {\n    return {\n      searchText: '',\n      showList: false,\n      cursor: 0,\n    };\n  },\n  computed: {\n    itemGroups() {\n      return this.items.reduce((prv, crr, index) => {\n        const groupName = crr.suggestionGroup || '';\n        const item = {\n          ...crr,\n          vsItemIndex: index,\n        };\n        const foundGroup = prv.find(gr => gr.header === groupName);\n        if (foundGroup) {\n          foundGroup.items.push(item);\n        } else {\n          prv.push({\n            header: groupName,\n            items: [item],\n          });\n        }\n        return prv;\n      }, []);\n    },\n  },\n  watch: {\n    value: {\n      handler(value) {\n        if (!value) {\n          return;\n        }\n        this.searchText = this.setLabel(value);\n      },\n      deep: true,\n    },\n    // eslint-disable-next-line func-names\n    'items.length': function () {\n      // Items might be changed from Promise after searching\n      // So we need the check if we should show the suggestion list\n      this.showList = this.isAbleToShowList();\n    },\n  },\n  created() {\n    this.checkMissingProps();\n  },\n  mounted() {\n    if (this.value) {\n      this.searchText = this.setLabel(this.value);\n    }\n  },\n  methods: {\n    inputChange() {\n      this.showList = this.isAbleToShowList();\n      this.cursor = 0;\n      this.$emit('changed', this.searchText);\n    },\n    isAbleToShowList() {\n      return (this.searchText || '').length >= this.minLen && this.items.length > 0;\n    },\n    checkMissingProps() {\n      if (!this.itemTemplate) {\n        console.warn('You need to pass `template` as the suggestion list item template');\n      }\n    },\n    focus() {\n      this.$emit('focus', this.searchText);\n      this.showList = this.isAbleToShowList();\n    },\n    blur() {\n      this.$emit('blur', this.searchText);\n      // set timeout for the click event to work\n      setTimeout(() => {\n        this.showList = false;\n      }, 200);\n    },\n    selectItem({ vsItemIndex, ...item } = {}) {\n      if (item) {\n        this.searchText = this.setLabel(item);\n        this.$emit('selected', item);\n      }\n      this.$emit('input', item);\n    },\n    keyUp() {\n      this.$emit('key-up', this.searchText);\n      if (this.cursor > 0) {\n        this.cursor -= 1;\n      }\n    },\n    keyDown() {\n      this.$emit('key-down', this.searchText);\n      if (this.cursor < this.items.length - 1) {\n        this.cursor += 1;\n      }\n    },\n    keyEnter() {\n      if (this.showList && this.items[this.cursor]) {\n        this.selectItem(this.items[this.cursor]);\n        this.showList = false;\n      }\n      this.$emit('enter', this.items[this.cursor]);\n    },\n  },\n};\n</script>\n\n<style>\n.vue-suggestion {\n  position: relative;\n}\n.vue-suggestion .vs__list,\n.vue-suggestion .vs__loading {\n  position: absolute;\n}\n.vue-suggestion .vs__list .vs__list-item {\n  cursor: pointer;\n}\n.vue-suggestion .vs__list .vs__list-item.vs__item-active {\n  background-color: #f3f6fa;\n}\n</style>\n"]
+      "sourcesContent": ["<template>\n  <div :class=\"[wrapperClasses, 'vue-suggestion']\">\n    <div :class=\"[{ vs__selected: value }, inputWrapperClasses, 'vs__input-group']\">\n      <input\n        v-bind:id=\"randomID\"\n        v-model=\"searchText\"\n        type=\"search\"\n        :class=\"[inputClasses, 'vs__input']\"\n        :placeholder=\"placeholder\"\n        :disabled=\"disabled\"\n        :maxlength=\"maxLen\"\n        @blur=\"blur\"\n        @focus=\"focus\"\n        @input=\"inputChange\"\n        @keydown.enter.prevent=\"keyEnter\"\n        @keydown.up.prevent=\"keyUp\"\n        @keydown.down.prevent=\"keyDown\"\n      />\n      <slot name=\"searchSlot\" />\n    </div>\n    <slot v-if=\"loading\" name=\"loading\">\n      <div class=\"vs__loading\">Loading...</div>\n    </slot>\n    <slot v-else-if=\"showList\" name=\"suggestionList\">\n      <div :class=\"[suggestionListClasses, 'vs__list']\">\n        <div v-for=\"(group, index) in itemGroups\" :class=\"suggestionGroupClasses\" :key=\"index\">\n          <div\n            v-if=\"itemGroups.length > 1 || group.header\"\n            :class=\"[suggestionGroupHeaderClasses, 'vs__group-header']\"\n          >{{ group.header }}</div>\n          <div\n            v-for=\"item in group.items\"\n            :key=\"item.vsItemIndex\"\n            :class=\"[\n              { 'vs__item-active': item.vsItemIndex === cursor },\n              suggestionItemWrapperClasses,\n              'vs__list-item',\n            ]\"\n            @click=\"selectItem(item)\"\n            @mouseover=\"cursor = item.vsItemIndex\"\n          >\n            <div :class=\"suggestionItemClasses\" :is=\"itemTemplate\" :item=\"item\" />\n          </div>\n        </div>\n      </div>\n    </slot>\n  </div>\n</template>\n\n<script>\nimport utils from \"../utils\";\n\nfunction getDefault(key) {\n  const value = utils.options[key];\n  if (typeof value === \"undefined\") {\n    return utils.options[key];\n  }\n  return value;\n}\n\nexport default {\n  name: \"VueSuggestion\",\n  props: {\n    itemTemplate: {\n      type: Object,\n      default: () => getDefault(\"itemTemplate\")\n    },\n    minLen: {\n      type: Number,\n      default: () => getDefault(\"minLen\")\n    },\n    maxLen: {\n      type: Number,\n      default: () => getDefault(\"maxLen\")\n    },\n    value: {\n      type: [Object, String, Number],\n      default: () => getDefault(\"value\")\n    },\n    // setLabel: {\n    //   type: Function,\n    //   default: () => getDefault('setLabel'),\n    // },\n    items: {\n      type: Array,\n      default: () => getDefault(\"items\")\n    },\n    disabled: {\n      type: Boolean,\n      default: () => getDefault(\"disabled\")\n    },\n    loading: {\n      type: Boolean,\n      default: () => getDefault(\"loading\")\n    },\n    placeholder: {\n      type: String,\n      default: () => getDefault(\"placeholder\")\n    },\n    inputClasses: {\n      type: String,\n      default: () => getDefault(\"inputClasses\")\n    },\n    wrapperClasses: {\n      type: String,\n      default: () => getDefault(\"wrapperClasses\")\n    },\n    inputWrapperClasses: {\n      type: String,\n      default: () => getDefault(\"inputWrapperClasses\")\n    },\n    suggestionListClasses: {\n      type: String,\n      default: () => getDefault(\"suggestionListClasses\")\n    },\n    suggestionGroupClasses: {\n      type: String,\n      default: () => getDefault(\"suggestionGroupClasses\")\n    },\n    suggestionGroupHeaderClasses: {\n      type: String,\n      default: () => getDefault(\"suggestionGroupHeaderClasses\")\n    },\n    suggestionItemWrapperClasses: {\n      type: String,\n      default: () => getDefault(\"suggestionItemWrapperClasses\")\n    },\n    suggestionItemClasses: {\n      type: String,\n      default: () => getDefault(\"suggestionItemClasses\")\n    }\n  },\n  data() {\n    return {\n      randomID: new Date().getTime(),\n      searchText: \"\",\n      showList: false,\n      cursor: 0\n    };\n  },\n  computed: {\n    itemGroups() {\n      return this.items.reduce((prv, crr, index) => {\n        const groupName = crr.suggestionGroup || \"\";\n        const item = {\n          ...crr,\n          vsItemIndex: index\n        };\n        const foundGroup = prv.find(gr => gr.header === groupName);\n        if (foundGroup) {\n          foundGroup.items.push(item);\n        } else {\n          prv.push({\n            header: groupName,\n            items: [item]\n          });\n        }\n        return prv;\n      }, []);\n    }\n  },\n  watch: {\n    value: {\n      handler(value) {\n        if (!value) {\n          return;\n        }\n        this.searchText = this.setLabel(value);\n      },\n      deep: true\n    },\n    // eslint-disable-next-line func-names\n    \"items.length\": function() {\n      // Items might be changed from Promise after searching\n      // So we need the check if we should show the suggestion list\n      this.showList = this.isAbleToShowList();\n    }\n  },\n  created() {\n    this.checkMissingProps();\n  },\n  mounted() {\n    if (this.value) {\n      this.searchText = this.setLabel(this.value);\n    }\n  },\n  methods: {\n    setLabel(item) {\n      return \"\";\n    },\n    inputChange($ev) {\n      this.showList = this.isAbleToShowList($ev);\n      this.cursor = 0;\n      this.$emit(\"changed\", this.searchText);\n    },\n    isAbleToShowList($ev) {\n      if ($ev && $ev.target && document.activeElement != $ev.target) return false;\n      return (\n        (this.searchText || \"\").length >= this.minLen && this.items.length > 0\n      );\n    },\n    checkMissingProps() {\n      if (!this.itemTemplate) {\n        console.warn(\n          \"You need to pass `template` as the suggestion list item template\"\n        );\n      }\n    },\n    focus($ev) {\n      this.$emit(\"focus\", this.searchText);\n      this.showList = this.isAbleToShowList($ev);\n    },\n    blur() {\n      this.$emit(\"blur\", this.searchText);\n      // set timeout for the click event to work\n      setTimeout(() => {\n        this.showList = false;\n      }, 200);\n    },\n    selectItem({ vsItemIndex, ...item } = {}) {\n      if (item) {\n        this.searchText = this.setLabel(item);\n        this.$emit(\"selected\", item);\n      }\n      this.$emit(\"input\", item);\n    },\n    keyUp() {\n      this.$emit(\"key-up\", this.searchText);\n      if (this.cursor > 0) {\n        this.cursor -= 1;\n      }\n    },\n    keyDown() {\n      this.$emit(\"key-down\", this.searchText);\n      if (this.cursor < this.items.length - 1) {\n        this.cursor += 1;\n      }\n    },\n    keyEnter() {\n      if (this.showList && this.items[this.cursor]) {\n        this.selectItem(this.items[this.cursor]);\n        this.showList = false;\n      }\n      this.$emit(\"enter\", this.items[this.cursor]);\n    }\n  }\n};\n</script>\n\n<style>\n.vue-suggestion .vs__list,\n.vue-suggestion .vs__loading {\n  position: absolute;\n}\n.vue-suggestion .vs__list .vs__list-item {\n  cursor: pointer;\n}\n.vue-suggestion .vs__list .vs__list-item.vs__item-active {\n  background-color: #f3f6fa;\n}\n</style>\n"]
     },
     media: undefined
   });
@@ -2316,21 +2370,21 @@ var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
 /* scoped */
 
 
-var __vue_scope_id__ = undefined;
+var __vue_scope_id__$1 = undefined;
 /* module identifier */
 
-var __vue_module_identifier__ = undefined;
+var __vue_module_identifier__$1 = undefined;
 /* functional template */
 
-var __vue_is_functional_template__ = false;
+var __vue_is_functional_template__$1 = false;
 /* style inject SSR */
 
 /* style inject shadow dom */
 
-var __vue_component__ = normalizeComponent({
-  render: __vue_render__,
-  staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, createInjector, undefined, undefined);
+var __vue_component__$1 = normalizeComponent({
+  render: __vue_render__$1,
+  staticRenderFns: __vue_staticRenderFns__$1
+}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, false, createInjector, undefined, undefined);
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -2340,7 +2394,7 @@ function install(Vue) {
   if (install.installed) return;
   install.installed = true;
   utils.options = _objectSpread$2({}, defaultOptions, {}, customOptions);
-  Vue.component('vue-suggestion', __vue_component__);
+  Vue.component('vue-suggestion', __vue_component__$1);
 }
 var plugin = {
   install: install
@@ -2359,4 +2413,4 @@ if (GlobalVue) {
 }
 
 export default plugin;
-export { __vue_component__ as VueSuggestion, install };
+export { __vue_component__$1 as VueSuggestion, install };
