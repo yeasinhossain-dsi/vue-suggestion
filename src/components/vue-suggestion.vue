@@ -212,6 +212,7 @@ export default {
     },
     blur() {
       this.$emit("blur", this.searchText);
+      this.searchText=''
       // set timeout for the click event to work
       setTimeout(() => {
         this.showList = false;
